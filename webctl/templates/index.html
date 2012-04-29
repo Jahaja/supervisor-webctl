@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Supervisor Webctl</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="Joakim Hamén">
+
+        <link href="/static/css/bootstrap.css" rel="stylesheet">
+        <style>
+            body {
+                padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">Supervisor Webctl</a>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                        </ul>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+
+        <div id="webctl-app" class="container-fluid">
+            <div class="row-fluid">
+                <div id="sidebar" class="span3">
+
+                </div>
+                <div id="content" class="span7">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#" class="process-list">Process list</a></li>
+                        <li><a href="#" class="host-list">Hosts</a></li>
+                    </ul>
+                    <div class="table-container">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /container -->
+
+        <script src="/static/js/jquery-1.7.2.js"></script>
+        <script src="/static/js/json2.js"></script>
+        <script src="/static/js/underscore.js"></script>
+        <script src="/static/js/backbone.js"></script>
+        <script src="/static/js/bootstrap-dropdown.js"></script>
+        <script src="/static/js/bootstrap-tab.js"></script>
+        <script src="/static/js/bootstrap-tooltip.js"></script>
+        <script src="/static/js/bootstrap-button.js"></script>
+        <script src="/static/js/application.js"></script>
+
+        <script id="host-list-template" type="text/template">
+            <table id="host-list" class="table table-striped table-condensed">
+                <thead>
+                <tr>
+                    <th>Identification</th>
+                    <th>Host</th>
+                    <th>API version</th>
+                    <th>Version</th>
+                    <th>PID</th>
+                    <th>Controls</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td colspan="6" style="text-align: center">Loading ...</td>
+                </tr>
+                </tbody>
+            </table>
+        </script>
+
+        <script id="host-row-template" type="text/template">
+            <td><a class="view-process" href="#"><%= identification %></a></td>
+            <td><a class="view-process" href="#"><%= host_id %></a></td>
+            <td><%= api_version %></td>
+            <td><%= supervisor_version %></td>
+            <td><%= pid %></td>
+            <td>
+                <button class="btn btn-small btn-warning restart" data-loading-text="Restarting...">Restart</button>
+            </td>
+        </script>
+
+        <script id="process-list-template" type="text/template">
+            <table id="process-list" class="table table-striped table-condensed">
+                <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Process</th>
+                    <th>Description</th>
+                    <th>Group</th>
+                    <th>Host</th>
+                    <th>Controls</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td colspan="6" style="text-align: center">Loading ...</td>
+                </tr>
+                </tbody>
+            </table>
+        </script>
+
+        <script id="process-row-template" type="text/template">
+            <td>
+                <% if(statename == "RUNNING") { %>
+                    <span class="label label-success"><%= statename %></span>
+                <% } else if(statename == "STOPPED") { %>
+                    <span class="label label-important"><%= statename %></span>
+                <% } %>
+            </td>
+            <td><a class="view-process" href="#"><%= name %></a></td>
+            <td><%= description %></td>
+            <td><%= group %></td>
+            <td><%= host_id %></td>
+            <td>
+                <% if(statename == "RUNNING") { %>
+                    <button class="btn btn-small btn-danger stop" data-loading-text="Stopping...">Stop</button>
+                    <button class="btn btn-small btn-warning restart" data-loading-text="Restarting...">Restart</button>
+                <% } else { %>
+                    <button class="btn btn-small btn-success start" data-loading-text="Starting...">Start</button>
+                <% } %>
+            </td>
+        </script>
+
+        <script id="process-info-template" type="text/template">
+            <div class="well">
+                <h3>Process info</h3>
+                <dl class="dl-horizontal">
+                    <dt>Processname</dt>
+                    <dd><%= name %></dd>
+                    <dt>Group</dt>
+                    <dd><%= group %></dd>
+                    <dt>Host</dt>
+                    <dd><%= host_id %></dd>
+                    <dt>PID</dt>
+                    <dd><%= pid %></dd>
+                    <dt>State</dt>
+                    <dd><span class="label label-success"><%= statename %></span> ( #<%= state %> )</dd>
+                    <dt>Description</dt>
+                    <dd><%= description %></dd>
+                    <dt>Current time</dt>
+                    <dd><%= new Date(now*1000).toUTCString() %></dd>
+                    <dt>Last stopped</dt>
+                    <dd><%= new Date(stop*1000).toUTCString() %></dd>
+                    <dt>Last started</dt>
+                    <dd><%= new Date(start*1000).toUTCString() %></dd>
+                    <dt>Exit status</dt>
+                    <dd><%= exitstatus %></dd>
+                </dl>
+                <dl>
+                    <dt>Log file</dt>
+                    <dd><%= logfile %></dd>
+                    <dt>Stdout log file</dt>
+                    <dd><%= stdout_logfile %></dd>
+                    <dt>Stderr log file</dt>
+                    <dd><%= stderr_logfile %></dd>
+                    <dt>Spawn error</dt>
+                    <dd><%= spawnerr %></dd>
+                </dl>
+            </div>
+        </script>
+    </body>
+</html>
