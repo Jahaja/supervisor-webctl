@@ -8,7 +8,7 @@ from webctl.core import SupervisorWebctl
 
 def main():
     hosts = [
-        "http://54.247.168.245:9001"
+        "http://127.0.0.1:9001"
     ]
     app.webctl = SupervisorWebctl(hosts)
     app.run(debug=True)
